@@ -1,0 +1,86 @@
+name: Check Attendance
+
+on:
+  workflow_dispatch:
+    inputs:
+      student_ids:
+        description: "Comma-separated student IDs (or leave blank to use students.txt)"
+        required: false
+        type: string
+      start_date:
+        description: "Start date (MM/DD/YYYY)"
+        required: true
+        type: string
+      end_date:
+        description: "End date (MM/DD/YYYY)"
+        required: true
+        type: string
+      workers:
+        description: "Number of parallel workers"
+        required: false
+        default: "1"
+        type: string
+      upload_sheets:
+        description: "Upload results to Google Sheets"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  check-attendance:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run attendance checker
+        env:
+          HSOA_USERNAME: ${{ secrets.HSOA_USERNAME }}
+          HSOA_PASSWORD: ${{ secrets.HSOA_PASSWORD }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          GOOGLE_SPREADSHEET_ID: ${{ secrets.GOOGLE_SPREADSHEET_ID }}
+          GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
+        run: |
+          STUDENTS="${{ github.event.inputs.student_ids }}"
+          if [ -z "$STUDENTS" ] && [ -f students.txt ]; then
+            STUDENTS="students.txt"
+          fi
+          if [ -z "$STUDENTS" ]; then
+            echo "No student IDs provided and students.txt not found." >&2
+            exit 1
+          fi
+
+          EXTRA_FLAGS=""
+          if [ "${{ github.event.inputs.upload_sheets }}" = "true" ]; then
+            EXTRA_FLAGS="--upload-sheets"
+          fi
+
+          python attendance_checker.py \
+            --students "$STUDENTS" \
+            --start-date "${{ github.event.inputs.start_date }}" \
+            --end-date "${{ github.event.inputs.end_date }}" \
+            --workers "${{ github.event.inputs.workers }}" \
+            --output attendance_report.csv \
+            $EXTRA_FLAGS
+
+      - name: Upload CSV artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: attendance-report
+          path: attendance_report.csv
