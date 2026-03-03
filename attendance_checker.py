@@ -682,18 +682,24 @@ def parse_args():
     return parser.parse_args()
 
 
-def load_student_ids(students_arg: str) -> list:
+  def load_student_ids(students_arg: str) -> list:
     """Return list of student IDs from a comma/space/newline-separated string or file path."""
-    path = Path(students_arg)
-    if path.is_file():
-        ids = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
-        return [sid for sid in ids if sid]
+    # Only check if it's a file if the string is short enough to be a valid path
+    # Linux max filename is 255 chars, max path is 4096 chars
+    if len(students_arg) <= 4096:
+        try:
+            path = Path(students_arg)
+            if path.is_file():
+                ids = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
+                return [sid for sid in ids if sid]
+        except OSError:
+            pass  # Not a valid path, treat as student ID string
+
     # Split on commas, spaces, or newlines
     ids = re.split(r'[,\s]+', students_arg)
-    return [sid.strip() for sid in ids if sid.strip()]
-
-
-def build_config(args) -> Config:
+    return [sid.strip() for sid in ids if sid.strip()]  
+  
+  def build_config(args) -> Config:
     username = os.environ.get("HSOA_USERNAME", "")
     password = os.environ.get("HSOA_PASSWORD", "")
     if not username or not password:
