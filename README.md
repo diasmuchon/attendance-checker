@@ -61,11 +61,20 @@ python attendance_checker.py \
   --output attendance_report.csv
 ```
 
+You can also separate student IDs with spaces or newlines:
+
+```bash
+python attendance_checker.py \
+  --students "student1 student2 student3" \
+  --start-date "01/01/2025" \
+  --end-date "03/31/2025"
+```
+
 ### CLI Arguments
 
 | Argument | Required | Description |
 |---|---|---|
-| `--students` | Yes | Comma-separated student IDs **or** path to a file with one ID per line |
+| `--students` | Yes | Comma-, space-, or newline-separated student IDs **or** path to a file with one ID per line |
 | `--start-date` | Yes | Start date in `MM/DD/YYYY` format |
 | `--end-date` | Yes | End date in `MM/DD/YYYY` format |
 | `--workers` | No | Number of parallel browser workers (default: `1`) |
@@ -109,7 +118,7 @@ Go to **Settings → Secrets and variables → Actions** in your repository and 
 1. Go to **Actions → Check Attendance** in your repository.
 2. Click **Run workflow**.
 3. Fill in the inputs:
-   - **Student IDs** – comma-separated list (or leave blank to use a `students.txt` file committed to the repo)
+   - **Student IDs** – comma-, space-, or newline-separated list (or leave blank to use a `students.txt` file committed to the repo)
    - **Start date** – e.g. `01/01/2025`
    - **End date** – e.g. `03/31/2025`
    - **Workers** – number of parallel browsers (default: `1`)

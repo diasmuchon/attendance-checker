@@ -651,7 +651,7 @@ def parse_args():
     parser.add_argument(
         "--students",
         required=True,
-        help="Comma-separated student IDs, or path to a file with one ID per line.",
+        help="Comma-, space-, or newline-separated student IDs, or path to a file with one ID per line.",
     )
     parser.add_argument(
         "--start-date",
@@ -683,12 +683,14 @@ def parse_args():
 
 
 def load_student_ids(students_arg: str) -> list:
-    """Return list of student IDs from a comma-separated string or file path."""
+    """Return list of student IDs from a comma/space/newline-separated string or file path."""
     path = Path(students_arg)
     if path.is_file():
         ids = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
         return [sid for sid in ids if sid]
-    return [sid.strip() for sid in students_arg.split(",") if sid.strip()]
+    # Split on commas, spaces, or newlines
+    ids = re.split(r'[,\s]+', students_arg)
+    return [sid.strip() for sid in ids if sid.strip()]
 
 
 def build_config(args) -> Config:
