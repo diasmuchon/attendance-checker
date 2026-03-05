@@ -682,7 +682,7 @@ def load_student_ids(students_arg: str) -> list:
             pass  # Not a valid path, treat as student ID string
 
     # Split on commas, spaces, or newlines
-    ids = re.split(r'[,\\s]+', students_arg)
+    ids = re.split(r'[,\s]+', students_arg)
     return [sid.strip() for sid in ids if sid.strip()]
 
 def build_config(args) -> Config:
